@@ -1,0 +1,14 @@
+{
+  "name": "trek-gotify",
+  "version": "1.0.0",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "dev": "npx -y trek-plugin-sdk dev",
+    "pack": "npx -y trek-plugin-sdk pack",
+    "test": "node --test"
+  },
+  "devDependencies": {
+    "trek-plugin-sdk": "^1.4.0"
+  }
+}

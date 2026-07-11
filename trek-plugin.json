@@ -1,0 +1,85 @@
+{
+  "id": "trek-gotify",
+  "name": "Gotify",
+  "version": "1.0.0",
+  "apiVersion": 1,
+  "author": "jubnl",
+  "description": "Deliver your TREK notifications to a self-hosted Gotify server.",
+  "homepage": "https://github.com/jubnl/trek-gotify",
+  "icon": "Bell",
+  "type": "integration",
+  "trek": ">=3.3.0 <4.0.0",
+  "nativeModules": false,
+  "permissions": [
+    "hook:notification-channel",
+    "http:outbound:gotify.net"
+  ],
+  "egress": [
+    "gotify.net"
+  ],
+  "operatorEgress": true,
+  "requiredAddons": [],
+  "pluginDependencies": [],
+  "capabilities": {
+    "notificationChannel": {
+      "title": "Gotify"
+    }
+  },
+  "settings": [
+    {
+      "key": "serverUrl",
+      "label": "Gotify server URL",
+      "input_type": "text",
+      "placeholder": "https://gotify.example.com",
+      "hint": "Base URL of your Gotify server. The host must be covered by this plugin's egress list.",
+      "required": true,
+      "scope": "user"
+    },
+    {
+      "key": "appToken",
+      "label": "Application token",
+      "input_type": "text",
+      "hint": "In Gotify: Apps → Create Application → copy the token.",
+      "required": true,
+      "secret": true,
+      "scope": "user"
+    },
+    {
+      "key": "priority",
+      "label": "Priority",
+      "input_type": "select",
+      "hint": "Gotify priority for TREK notifications (0–10). 5 shows a normal notification.",
+      "required": false,
+      "scope": "user",
+      "options": [
+        {
+          "value": "1",
+          "label": "Min — no notification"
+        },
+        {
+          "value": "3",
+          "label": "Low"
+        },
+        {
+          "value": "5",
+          "label": "Normal"
+        },
+        {
+          "value": "8",
+          "label": "High"
+        },
+        {
+          "value": "10",
+          "label": "Max — bypass quiet hours"
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "key": "testConnection",
+      "label": "Test connection",
+      "hint": "Sends a test push to your Gotify server."
+    }
+  ]
+}
