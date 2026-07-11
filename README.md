@@ -28,7 +28,7 @@ takes you straight to the relevant trip.
 | Permission | Why it's needed |
 | --- | --- |
 | `hook:notification-channel` | Registers Gotify as a notification channel so TREK can hand it your notifications to deliver. This is the whole point of the plugin. |
-| `http:outbound` | Lets the plugin POST to a Gotify server. It can reach **only** the hosts in the manifest's `egress` list, plus any your admin adds under *Allowed hosts* (see Setup) — nothing else. |
+| `http:outbound` | Lets the plugin POST to a Gotify server. It ships with an **empty** egress list, so out of the box it can reach nothing at all — it can only ever reach the hosts your admin explicitly adds under *Allowed hosts* (see Setup). |
 
 This plugin deliberately requests **nothing else**. It cannot read your trips, your costs, or
 your files. It is never given an acting user, so even the trip-reading APIs that other plugins
@@ -54,8 +54,8 @@ A published plugin cannot know your hostname, so this one declares `operatorEgre
 **an admin adds the host after installing**, rather than you having to fork the plugin.
 
 In TREK: **Admin → Plugins → ⋯ → Allowed hosts**, then add e.g. `gotify.mydomain.com`. TREK
-restarts the plugin so it picks up the new list. Until you do this, the plugin can only reach
-`gotify.net` and every send will be refused.
+restarts the plugin so it picks up the new list. Until you do this, the plugin has no allowed
+hosts at all and every send will be refused.
 
 Only an admin can add a host, and only for a plugin that declared `operatorEgress` — so this is
 not a way for the plugin to reach anywhere it likes.
