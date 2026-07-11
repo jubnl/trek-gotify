@@ -12,11 +12,9 @@
   "nativeModules": false,
   "permissions": [
     "hook:notification-channel",
-    "http:outbound:gotify.net"
+    "http:outbound"
   ],
-  "egress": [
-    "gotify.net"
-  ],
+  "egress": [],
   "operatorEgress": true,
   "requiredAddons": [],
   "pluginDependencies": [],
