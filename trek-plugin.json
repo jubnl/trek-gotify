@@ -1,7 +1,7 @@
 {
   "id": "trek-gotify",
   "name": "Gotify",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "apiVersion": 1,
   "author": "jubnl",
   "description": "Deliver your TREK notifications to a self-hosted Gotify server.",

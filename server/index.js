@@ -34,24 +34,71 @@ function priorityOf(config) {
   return Number.isInteger(n) && n >= 0 && n <= 10 ? n : DEFAULT_PRIORITY;
 }
 
+// The deepest message + code in an error's cause chain. undici buries the real
+// failure under TypeError('fetch failed') — and multi-address connect failures
+// one level deeper still, inside an AggregateError — so walk err → cause →
+// errors[0] until there is nothing further down.
+function deepestError(err) {
+  let e = err;
+  for (let hops = 0; hops < 8; hops++) {
+    if (e instanceof AggregateError && e.errors.length) e = e.errors[0];
+    else if (e && typeof e === 'object' && e.cause) e = e.cause;
+    else break;
+  }
+  return e || err;
+}
+
+// Translate a failed fetch into a message the person staring at the settings
+// form can act on. TREK gives a plugin no structured egress error — only the
+// guard's message text — so the "egress:" matches are a deliberate coupling to
+// TREK's plugin-host wording; if that wording ever drifts, we fall through to
+// surfacing the raw detail, which is still strictly better than "fetch failed".
+function explainFetchError(err, host) {
+  const deep = deepestError(err);
+  const detail = String(deep.message || deep);
+  const code = deep.code;
+
+  let hint = '';
+  if (/egress: .* blocked address/.test(detail)) {
+    hint = ` TREK blocks plugin access to private/LAN addresses by default — the admin must start TREK with TREK_PLUGIN_ALLOW_PRIVATE_EGRESS=on (see this plugin's README, "Self-hosting on the same machine or LAN").`;
+  } else if (/egress: .*declared hosts/.test(detail)) {
+    hint = ` An admin must add this host under Admin → Plugins → Gotify → Allowed hosts.`;
+  } else if (err.name === 'TimeoutError' || deep.name === 'TimeoutError') {
+    return new Error(`Gotify did not answer within 7 s — is ${host} reachable from the machine running TREK?`, { cause: err });
+  } else if (code === 'ENOTFOUND' || code === 'EAI_AGAIN') {
+    hint = ` DNS could not resolve ${host} from where TREK runs — a LAN-only name needs the TREK container to use your LAN's DNS server.`;
+  } else if (code === 'ECONNREFUSED') {
+    hint = ` The connection was refused — is the port right and Gotify listening there?`;
+  } else if (typeof code === 'string' && /CERT|TLS/.test(code)) {
+    hint = ` TLS certificate problem at ${host} (self-signed or expired reverse-proxy cert?).`;
+  }
+  return new Error(`Could not reach Gotify: ${detail}.${hint}`, { cause: err });
+}
+
 async function push(config, title, message) {
   // URL first: it is the first field in the settings form, so it is the more useful
   // first complaint when a user has filled in nothing at all.
-  const endpoint = `${baseUrl(config)}/message`;
+  const base = baseUrl(config);
+  const endpoint = `${base}/message`;
   const token = String(config.appToken || '').trim();
   if (!token) throw new Error('No Gotify application token configured');
 
-  const res = await fetch(endpoint, {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      // Gotify's app-token header. Sent as a header, never in the query string,
-      // so the token cannot leak into the server's access log.
-      'X-Gotify-Key': token,
-    },
-    body: JSON.stringify({ title, message, priority: priorityOf(config) }),
-    signal: AbortSignal.timeout(7000),
-  });
+  let res;
+  try {
+    res = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        // Gotify's app-token header. Sent as a header, never in the query string,
+        // so the token cannot leak into the server's access log.
+        'X-Gotify-Key': token,
+      },
+      body: JSON.stringify({ title, message, priority: priorityOf(config) }),
+      signal: AbortSignal.timeout(7000),
+    });
+  } catch (err) {
+    throw explainFetchError(err, new URL(base).hostname);
+  }
 
   if (!res.ok) {
     const detail = await res.text().catch(() => '');

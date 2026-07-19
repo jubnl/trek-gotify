@@ -65,6 +65,8 @@ not a way for the plugin to reach anywhere it likes.
 If your Gotify runs at `localhost`, `192.168.x.x`, or a Docker service name, TREK's plugin
 sandbox blocks it *even after you allow the host* — plugins may not reach private addresses by
 default, which is the SSRF backstop that stops a plugin pivoting to your internal network.
+Since v1.0.1 the **Send test** button tells you exactly which of these you hit (blocked private
+address, host not in *Allowed hosts*, DNS, TLS, refused, timeout) instead of a bare "fetch failed".
 
 To allow it, start TREK with:
 
